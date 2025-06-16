@@ -1,0 +1,28 @@
+[server]
+headless = true
+port = 8080
+address = "0.0.0.0"
+enableXsrfProtection = false
+enableCORS = false
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#ff6b6b"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+
+[runner]
+magicEnabled = false
+fastReruns = true
+installTracer = false
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[ui]
+hideTopBar = false
+hideSidebarNav = false 

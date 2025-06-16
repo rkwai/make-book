@@ -215,6 +215,9 @@ test_chapters/
 *.md
 !README.md
 
+# Streamlit
+.streamlit/secrets.toml
+
 # Temporary files
 *.tmp
 *.temp 
