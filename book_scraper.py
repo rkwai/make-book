@@ -326,12 +326,16 @@ def get_chapter_text(chapters_file, output_dir):
     click.echo(f"Downloading {len(urls)} chapters...")
     
     for i, url in enumerate(urls, 1):
+        chapter_file = output_path / f"chapter-{i:03d}.md"
+        if chapter_file.exists():
+            click.echo(f"Skipping existing chapter {i}: {chapter_file.name}")
+            continue
+
         click.echo(f"Downloading chapter {i}/{len(urls)}: {url}")
         
         content = scraper.get_chapter_text(url)
         
         if content:
-            chapter_file = output_path / f"chapter-{i:03d}.md"
             with open(chapter_file, 'w', encoding='utf-8') as f:
                 f.write(f"# Chapter {i}\n\n")
                 f.write(content)
