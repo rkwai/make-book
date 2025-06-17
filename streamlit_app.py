@@ -22,6 +22,8 @@ if 'scraper' not in st.session_state:
     st.session_state.scraper = BookScraper()
 if 'chapters_content' not in st.session_state:
     st.session_state.chapters_content = {}
+if 'chapter_cache' not in st.session_state:
+    st.session_state.chapter_cache = {}  # Cache individual chapters by URL
 if 'pdf_ready' not in st.session_state:
     st.session_state.pdf_ready = False
 if 'pdf_path' not in st.session_state:
@@ -57,33 +59,58 @@ def extract_chapters(url):
     return None
 
 def download_chapters(chapter_df):
-    """Download selected chapters"""
+    """Download selected chapters with intelligent caching"""
     selected_chapters = chapter_df[chapter_df['include']].copy()
     selected_chapters = selected_chapters.sort_values('order').reset_index(drop=True)
     
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+    # Check which chapters need downloading
+    chapters_to_download = []
+    cached_count = 0
     
+    for _, row in selected_chapters.iterrows():
+        if row['url'] not in st.session_state.chapter_cache:
+            chapters_to_download.append(row)
+        else:
+            cached_count += 1
+    
+    # Show caching info
+    if cached_count > 0:
+        st.info(f"📚 Using cached content for {cached_count} chapters, downloading {len(chapters_to_download)} new chapters")
+    
+    # Only show progress bar if we need to download something
+    if chapters_to_download:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        for idx, row in enumerate(chapters_to_download):
+            progress = (idx + 1) / len(chapters_to_download)
+            progress_bar.progress(progress)
+            status_text.text(f"📖 Downloading: {row['title']} ({idx + 1}/{len(chapters_to_download)})")
+            
+            content = st.session_state.scraper.get_chapter_text(row['url'])
+            if content:
+                # Cache the downloaded content
+                st.session_state.chapter_cache[row['url']] = {
+                    'title': row['title'],
+                    'content': content,
+                    'url': row['url']
+                }
+            
+            # Small delay to be respectful
+            time.sleep(0.5)
+        
+        progress_bar.progress(1.0)
+        status_text.text("✅ All new chapters downloaded!")
+    else:
+        st.success("✅ All chapters already cached - no downloads needed!")
+    
+    # Build final chapters_content from cache
     chapters_content = {}
-    
-    for idx, row in selected_chapters.iterrows():
-        progress = (idx + 1) / len(selected_chapters)
-        progress_bar.progress(progress)
-        status_text.text(f"📖 Downloading: {row['title']} ({idx + 1}/{len(selected_chapters)})")
-        
-        content = st.session_state.scraper.get_chapter_text(row['url'])
-        if content:
-            chapters_content[row['order']] = {
-                'title': row['title'],
-                'content': content,
-                'url': row['url']
-            }
-        
-        # Small delay to be respectful
-        time.sleep(0.5)
-    
-    progress_bar.progress(1.0)
-    status_text.text("✅ All chapters downloaded!")
+    for _, row in selected_chapters.iterrows():
+        if row['url'] in st.session_state.chapter_cache:
+            cached_chapter = st.session_state.chapter_cache[row['url']].copy()
+            cached_chapter['title'] = row['title']  # Use current title (might be edited)
+            chapters_content[row['order']] = cached_chapter
     
     return chapters_content
 
@@ -314,9 +341,15 @@ with st.sidebar:
     Only scrape content you have permission to access. Respect website terms of service and copyright laws.
     """)
     
+    # Show cache info
+    if 'chapter_cache' in st.session_state and st.session_state.chapter_cache:
+        cache_count = len(st.session_state.chapter_cache)
+        st.markdown(f"### 💾 Cache Info")
+        st.info(f"📚 {cache_count} chapters cached for faster regeneration")
+    
     # Reset button
     if st.button("🔄 Start Over"):
-        for key in ['chapters', 'chapters_content', 'pdf_ready', 'pdf_path']:
+        for key in ['chapters', 'chapters_content', 'chapter_cache', 'pdf_ready', 'pdf_path']:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
