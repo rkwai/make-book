@@ -189,27 +189,60 @@ class BookScraper:
         <head>
             <meta charset="UTF-8">
             <style>
+                @font-face {{
+                    font-family: 'Arial';
+                    src: url('fonts/Arial.ttf') format('truetype');
+                    font-weight: normal;
+                    font-style: normal;
+                }}
+                @font-face {{
+                    font-family: 'Arial';
+                    src: url('fonts/Arial-Italic.ttf') format('truetype');
+                    font-weight: normal;
+                    font-style: italic;
+                }}
+                @font-face {{
+                    font-family: 'Arial';
+                    src: url('fonts/Arial-Bold.ttf') format('truetype');
+                    font-weight: bold;
+                    font-style: normal;
+                }}
+                @font-face {{
+                    font-family: 'Arial';
+                    src: url('fonts/Arial-Bold-Italic.ttf') format('truetype');
+                    font-weight: bold;
+                    font-style: italic;
+                }}
                 body {{
-                    font-family: Georgia, serif;
+                    font-family: 'Arial', sans-serif;
                     font-size: 12pt;
-                    line-height: 1.6;
+                    line-height: 1.5;
                     max-width: 800px;
-                    margin: 0 auto;
-                    padding: 40px;
+                    margin: 40px auto;
+                    padding: 0 40px;
                     color: #333;
+                    text-align: justify;
                 }}
                 h1, h2, h3, h4, h5, h6 {{
-                    color: #2c3e50;
+                    color: #000;
                     margin-top: 2em;
                     margin-bottom: 1em;
+                    text-align: center;
+                    font-weight: bold;
+                    font-family: 'Arial', sans-serif;
                 }}
                 h1 {{
-                    border-bottom: 3px solid #2c3e50;
-                    padding-bottom: 10px;
+                    font-size: 1.8em;
+                    margin-bottom: 2em;
+                    border-bottom: none;
+                    padding-bottom: 0;
                 }}
                 p {{
-                    margin-bottom: 1em;
-                    text-align: justify;
+                    margin-bottom: 0.8em;
+                    text-indent: 1.5em;
+                }}
+                h1 + p, h2 + p, h3 + p {{
+                    text-indent: 0;
                 }}
                 hr {{
                     page-break-before: always;
@@ -243,7 +276,8 @@ class BookScraper:
         """
         
         # Generate PDF
-        weasyprint.HTML(string=html_content).write_pdf(output_file)
+        base_url = Path.cwd().as_uri() + '/'
+        weasyprint.HTML(string=html_content, base_url=base_url).write_pdf(output_file)
         
     def _markdown_to_html(self, markdown_text):
         """Convert markdown to HTML"""
@@ -252,7 +286,7 @@ class BookScraper:
 
 @click.group()
 def cli():
-    """Book scraper and PDF generator"""
+    """A CLI tool for scraping web books and converting them to various formats."""
     pass
 
 @cli.command()
