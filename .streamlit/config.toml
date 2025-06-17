@@ -4,6 +4,8 @@ port = 8080
 address = "0.0.0.0"
 enableXsrfProtection = false
 enableCORS = false
+baseUrlPath = ""
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false
